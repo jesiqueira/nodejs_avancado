@@ -1,7 +1,7 @@
 # Projeto para estudo de Nodejs Avançado
 
 ## Por que estou criando esse projeto?
-Nesse projeto é para estudo do Nodejs e com isso busco me tornar uma profissinal mais qualificado para o mercado de trabalho e especialmente para meu projeto de vida.
+Este projeto é para estudo do Nodejs, nele eu busco me tornar uma profissinal mais qualificado para o mercado de trabalho e especialmente para meu projeto de vida.
 
 ## Por onde começar?
 Para facilitar os novatos assim como eu vou descrever a baixo como realizar as configurações iniciais do projeto para que funcione adequatamente.
