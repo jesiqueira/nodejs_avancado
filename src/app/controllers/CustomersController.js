@@ -9,7 +9,7 @@ import Customers from '../models/Customer'
 class CustomersController {
     async index(req, res) {
         try {
-            const data = await Customers.findAll()
+            const data = await Customers.findAll({ limit: 1000 })
             return res.json(data)
         } catch (err) {
             console.error(err)

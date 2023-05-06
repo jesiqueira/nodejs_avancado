@@ -1,22 +1,20 @@
 import { Model, DataTypes } from 'sequelize'
 
-class Contacts extends Model {
+class Users extends Model {
     static init(sequelize) {
         return super.init(
             {
                 name: DataTypes.STRING,
                 email: DataTypes.STRING,
+                password_hash: DataTypes.STRING,
+                provaider: DataTypes.BOOLEAN,
             },
             {
                 sequelize,
-                modelName: 'Contacts',
+                modelName: 'Users',
             }
         )
     }
-
-    static associations(models) {
-        this.belongsTo(models.Customer, { foreignKey: 'customer_id' })
-    }
 }
 
-export default Contacts
+export default Users

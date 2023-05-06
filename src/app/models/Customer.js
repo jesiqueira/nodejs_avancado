@@ -13,6 +13,9 @@ class Customers extends Model {
             }
         )
     }
+    static associations(models) {
+        this.hasMany(models.Contact)
+    }
 }
 
 export default Customers

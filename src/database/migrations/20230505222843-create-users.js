@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable('contacts', {
+        await queryInterface.createTable('users', {
             id: {
                 type: Sequelize.INTEGER,
                 primaryKey: true,
@@ -18,6 +18,15 @@ module.exports = {
                 allowNull: false,
                 unique: true,
             },
+            password_hash: {
+                type: Sequelize.STRING,
+                allowNull: false,
+            },
+            provaider: {
+                type: Sequelize.BOOLEAN,
+                defaultValue: false,
+                allowNull: false,
+            },
             created_at: {
                 type: Sequelize.DATE,
                 allowNull: false,
@@ -26,17 +35,10 @@ module.exports = {
                 type: Sequelize.DATE,
                 allowNull: false,
             },
-            customer_id: {
-                type: Sequelize.INTEGER,
-                references: { model: 'customers', key: 'id' },
-                onUpdate: 'CASCADE',
-                onDelete: 'CASCADE',
-                allowNull: false,
-            },
         })
     },
 
-    async down(queryInterface) {
-        await queryInterface.dropTable('contacts')
+    async down(queryInterface, Sequelize) {
+        await queryInterface.dropTable('users')
     },
 }
