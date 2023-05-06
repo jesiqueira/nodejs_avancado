@@ -6,6 +6,7 @@ class Contacts extends Model {
             {
                 name: DataTypes.STRING,
                 email: DataTypes.STRING,
+                status: DataTypes.ENUM('ACTIVE', 'ARCHIVED'),
             },
             {
                 sequelize,

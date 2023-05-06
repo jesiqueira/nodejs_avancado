@@ -7,7 +7,6 @@ class Users extends Model {
                 name: DataTypes.STRING,
                 email: DataTypes.STRING,
                 password_hash: DataTypes.STRING,
-                provaider: DataTypes.BOOLEAN,
             },
             {
                 sequelize,
