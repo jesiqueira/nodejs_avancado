@@ -8,12 +8,20 @@ const models = [Customer, Contact, User]
 
 class Database {
     constructor() {
+        this.connection = new Sequelize(config)
         this.init()
+        this.associate()
     }
 
     init() {
-        this.connection = new Sequelize(config)
         models.forEach((model) => model.init(this.connection))
+    }
+    associate() {
+        models.forEach((model) => {
+            if (model.associate) {
+                model.associate(this.connection.models)
+            }
+        })
     }
 }
 
