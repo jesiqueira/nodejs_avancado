@@ -73,11 +73,13 @@ class UsersController {
                 limit,
                 offset: limit * page - limit,
             })
+            console.log({ userId: req.userId })
             return res.json(data)
         } catch (err) {
             console.error(err)
             return res.status(500).json({ error: 'Internal server error' })
         }
+
     }
 
     async show(req, res) {

@@ -17,7 +17,10 @@ export default async (req, res, next) => {
 
     try {
         const decode = await promisify(jwt.verify)(token, authConfig.secret)
-        console.log(decode)
+
+        req.userId = decode.id
+
+        return next()
     } catch (error) {
         return res.status(401).json({ error: 'Token inválido!' })
     }
@@ -25,5 +28,5 @@ export default async (req, res, next) => {
     //     return next()
     // }
     // return res.status(401).json({ error: 'Usuario não permitido para acessar essa API!' })
-    return next()
+    // return next()
 }
