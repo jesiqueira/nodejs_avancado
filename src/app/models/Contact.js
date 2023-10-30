@@ -1,6 +1,6 @@
 import { Model, DataTypes } from 'sequelize'
 
-class Contacts extends Model {
+class Contact extends Model {
     static init(sequelize) {
         return super.init(
             {
@@ -10,14 +10,18 @@ class Contacts extends Model {
             },
             {
                 sequelize,
-                modelName: 'Contacts',
+                modelName: 'Contact',
+                name: {
+                    singular: 'contact',
+                    plural: 'contacts',
+                },
             }
         )
     }
 
-    static associations(models) {
+    static associate(models) {
         this.belongsTo(models.Customer, { foreignKey: 'customer_id' })
     }
 }
 
-export default Contacts
+export default Contact

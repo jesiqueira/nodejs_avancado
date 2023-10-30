@@ -1,12 +1,11 @@
 import { Op } from 'sequelize'
 import { parseISO } from 'date-fns'
 import * as Yup from 'yup'
-import Customer from '../models/Customer'
-import Contact from '../models/Contact'
+import User from '../models/User'
 
-class CustomersController {
+class UsersController {
     async index(req, res) {
-        const { name, email, status, createdBefore, createdAfter, updatedBefore, updatedAfter, sort } = req.query
+        const { name, email, createdBefore, createdAfter, updatedBefore, updatedAfter, sort } = req.query
         const page = req.query.page || 1
         const limit = req.query.limit || 25
 
@@ -26,14 +25,6 @@ class CustomersController {
                 ...where,
                 email: {
                     [Op.iLike]: email,
-                },
-            }
-        }
-        if (status) {
-            where = {
-                ...where,
-                status: {
-                    [Op.in]: status.split(',').map((item) => item.toUpperCase()),
                 },
             }
         }
@@ -75,14 +66,9 @@ class CustomersController {
         }
 
         try {
-            const data = await Customer.findAll({
+            const data = await User.findAll({
+                attributes: { exclude: ['password', 'password_hash'] },
                 where,
-                include: [
-                    {
-                        model: Contact,
-                        attributes: ['id', 'status'],
-                    },
-                ],
                 order,
                 limit,
                 offset: limit * page - limit,
@@ -93,65 +79,94 @@ class CustomersController {
             return res.status(500).json({ error: 'Internal server error' })
         }
     }
-    //recuperar 1 Customer
-    async show(req, res) {
-        const customer = await Customer.findByPk(req.params.id)
 
-        if (!customer) {
+    async show(req, res) {
+        const user = await User.findOne({
+            where: {
+                id: req.params.id,
+            },
+            attributes: { exclude: ['password_hash'] },
+        })
+
+        if (!user) {
             return res.status(404).json()
         }
 
-        return res.json(customer)
+        return res.json(user)
     }
 
     async create(req, res) {
         const schema = Yup.object().shape({
             name: Yup.string().required(),
             email: Yup.string().email().required(),
-            status: Yup.string().uppercase(),
+            password: Yup.string().required().min(8),
+            passwordConfirmation: Yup.string().when('password', (password, field) =>
+                password ? field.required().oneOf([Yup.ref('password')]) : field
+            ),
         })
 
         if (!(await schema.isValid(req.body))) {
             return res.status(400).json({ error: 'Error ao validar schema' })
         }
 
-        const customer = await Customer.create(req.body)
+        const { id, name, email, updatedAt, createdAt } = await User.create(req.body)
 
-        return res.status(201).json(customer)
+        return res.status(201).json({ id, name, email, updatedAt, createdAt })
     }
 
     async update(req, res) {
         const schema = Yup.object().shape({
             name: Yup.string(),
             email: Yup.string().email(),
-            status: Yup.string().uppercase(),
+            oldPassword: Yup.string().min(8),
+            password: Yup.string().when('oldPassword', {
+                is: (oldPassword) => !!oldPassword,
+                then: () => Yup.string().min(8).required('A senha é obrigatória quando a senha antiga é fornecida.'),
+            }),
+            // O bloco then é executado quando a condição definida em is for verdadeira
+            passwordConfirmation: Yup.string().when('password', {
+                is: (password) => !!password, //is: (oldPassword) => !!oldPassword: Esta é a condição da validação condicional. Ela verifica se o campo "oldPassword" existe e não é uma string vazia ou nula. Se isso for verdadeiro, a validação condicional será ativada.
+                then: () =>
+                    Yup.string()
+                        .oneOf([Yup.ref('password')])
+                        .required(),
+            }),
+            // O oneOf()faz com que a validação siga pelo menos um tipo específico a ser definido em uma lista que é passada como parâmetro
+            //  já o ref() retorna a referência de um item quando passado o nome do mesmo.
         })
 
         if (!(await schema.isValid(req.body))) {
-            return res.status(400).json({ error: 'Error ao validar schema' })
+            return res.status(400).json({ error: 'Campos password e passwordConfirmation são Obrigatório quando informado oldPassword.' })
         }
 
-        const customer = await Customer.findByPk(req.params.id)
+        const user = await User.findByPk(req.params.id)
 
-        if (!customer) {
+        if (!user) {
             return res.status(404).json()
         }
 
-        await customer.update(req.body)
+        const { oldPassword } = req.body
 
-        return res.json(customer)
+        if (oldPassword && !(await user.checkPassword(oldPassword))) {
+            return res.status(401).json({ error: 'Senha de Usuário não confere!' })
+        }
+
+        const { id, name, email, updatedAt, createdAt } = await user.update(req.body)
+
+        return res.status(201).json({ id, name, email, updatedAt, createdAt })
     }
 
     async destroy(req, res) {
-        const customer = await Customer.findByPk(req.params.id)
+        const user = await User.findByPk(req.params.id)
 
-        if (!customer) {
+        if (!user) {
             return res.status(404).json()
         }
 
-        await customer.destroy()
+        await user.destroy()
+
         return res.json()
     }
 }
 
-export default new CustomersController()
+export default new UsersController()

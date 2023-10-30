@@ -4,13 +4,14 @@ import * as Yup from 'yup'
 import Customer from '../models/Customer'
 import Contact from '../models/Contact'
 
-class CustomersController {
+class ContactsController {
     async index(req, res) {
         const { name, email, status, createdBefore, createdAfter, updatedBefore, updatedAfter, sort } = req.query
+
         const page = req.query.page || 1
         const limit = req.query.limit || 25
 
-        let where = {}
+        let where = { customer_id: req.params.customerId }
         let order = []
 
         if (name) {
@@ -75,12 +76,13 @@ class CustomersController {
         }
 
         try {
-            const data = await Customer.findAll({
+            const data = await Contact.findAll({
                 where,
                 include: [
                     {
-                        model: Contact,
+                        model: Customer,
                         attributes: ['id', 'status'],
+                        required: true, // Para forçar o Inner Join
                     },
                 ],
                 order,
@@ -93,17 +95,25 @@ class CustomersController {
             return res.status(500).json({ error: 'Internal server error' })
         }
     }
-    //recuperar 1 Customer
+    //recuperar 1 Contact
     async show(req, res) {
-        const customer = await Customer.findByPk(req.params.id)
+        // localhost:3000/customers/1/contacts
+        // const contact = await Contact.findByPk(req.params.id)
+        const contact = await Contact.findOne({
+            where: {
+                customer_id: req.params.customerId,
+                id: req.params.id,
+            },
+            attributes: { exclude: ['customerId', 'customer_id'] },
+            // include:[Customer]
+        })
 
-        if (!customer) {
+        if (!contact) {
             return res.status(404).json()
         }
 
-        return res.json(customer)
+        return res.json(contact)
     }
-
     async create(req, res) {
         const schema = Yup.object().shape({
             name: Yup.string().required(),
@@ -115,9 +125,12 @@ class CustomersController {
             return res.status(400).json({ error: 'Error ao validar schema' })
         }
 
-        const customer = await Customer.create(req.body)
+        const contact = await Contact.create({
+            customer_id: req.params.customerId,
+            ...req.body,
+        })
 
-        return res.status(201).json(customer)
+        return res.status(201).json(contact)
     }
 
     async update(req, res) {
@@ -131,27 +144,38 @@ class CustomersController {
             return res.status(400).json({ error: 'Error ao validar schema' })
         }
 
-        const customer = await Customer.findByPk(req.params.id)
+        const contact = await Contact.findOne({
+            where: {
+                customer_id: req.params.customerId,
+                id: req.params.id,
+            },
+            attributes: { exclude: ['customerId', 'customer_id'] },
+        })
 
-        if (!customer) {
+        if (!contact) {
             return res.status(404).json()
         }
 
-        await customer.update(req.body)
+        await contact.update(req.body)
 
-        return res.json(customer)
+        return res.json(contact)
     }
 
     async destroy(req, res) {
-        const customer = await Customer.findByPk(req.params.id)
+        const contact = await Contact.findOne({
+            where: {
+                customer_id: req.params.customerId,
+                id: req.params.id,
+            },
+        })
 
-        if (!customer) {
+        if (!contact) {
             return res.status(404).json()
         }
 
-        await customer.destroy()
+        await contact.destroy()
         return res.json()
     }
 }
 
-export default new CustomersController()
+export default new ContactsController()

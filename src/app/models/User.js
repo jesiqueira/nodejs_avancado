@@ -1,19 +1,34 @@
-import { Model, DataTypes } from 'sequelize'
+import { Model, DataTypes, Sequelize } from 'sequelize'
+import bcrypt from 'bcryptjs'
 
-class Users extends Model {
+class User extends Model {
     static init(sequelize) {
-        return super.init(
+        super.init(
             {
                 name: DataTypes.STRING,
                 email: DataTypes.STRING,
+                password: Sequelize.VIRTUAL,
                 password_hash: DataTypes.STRING,
             },
             {
                 sequelize,
-                modelName: 'Users',
+                modelName: 'User',
+                name: {
+                    singular: 'user',
+                    plural: 'users',
+                },
             }
         )
+        this.addHook('beforeSave', async (user) => {
+            if (user.password) {
+                user.password_hash = await bcrypt.hash(user.password, 8)
+            }
+        })
+    }
+
+    checkPassword(password) {
+        return bcrypt.compare(password, this.password_hash)
     }
 }
 
-export default Users
+export default User
